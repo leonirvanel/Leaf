@@ -10,6 +10,7 @@
     <modules>
         <module>leaf-core</module>
         <module>leaf-server</module>
+        <module>leaf-client</module>
     </modules>
     <description>Distributed ID Generate Service</description>
     <developers>
@@ -49,6 +50,7 @@
         <commons-io.version>2.4</commons-io.version>
         <log4j.version>2.7</log4j.version>
         <mybatis-spring.version>1.2.5</mybatis-spring.version>
+        <dubbo.version>2.7.3</dubbo.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -151,6 +153,12 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo</artifactId>
+                <version>${dubbo.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
