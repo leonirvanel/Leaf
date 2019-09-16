@@ -24,7 +24,7 @@ public class SnowflakeService {
             int port = Integer.parseInt(properties.getProperty(Constants.LEAF_SNOWFLAKE_PORT));
             long sequenceBase = 0;
             long sequenceStep = 2;
-            idGen = new SnowflakeIDGenImpl(zkAddress, port, sequenceBase, sequenceStep);
+            idGen = new SnowflakeIDGenImpl(zkAddress, port, true, sequenceStep);
             if(idGen.init()) {
                 logger.info("Snowflake Service Init Successfully");
             } else {

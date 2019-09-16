@@ -8,7 +8,7 @@ import com.sankuai.inf.leaf.common.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SnowflakeIDGenImpl implements IDGen {
 
@@ -31,10 +31,10 @@ public class SnowflakeIDGenImpl implements IDGen {
     private long sequenceStep;
     private long lastTimestamp = -1L;
     public boolean initFlag = false;
-    private static final Random RANDOM = new Random();
     private int port;
+    private boolean odd;
 
-    public SnowflakeIDGenImpl(String zkAddress, int port, long sequenceBase, long sequenceStep) {
+    public SnowflakeIDGenImpl(String zkAddress, int port, boolean odd, long sequenceStep) {
         this.port = port;
         SnowflakeZookeeperHolder holder = new SnowflakeZookeeperHolder(Utils.getIp(), String.valueOf(port), zkAddress);
         initFlag = holder.init();
@@ -45,11 +45,9 @@ public class SnowflakeIDGenImpl implements IDGen {
             Preconditions.checkArgument(initFlag, "Snowflake Id Gen is not init ok");
         }
         Preconditions.checkArgument(workerId >= 0 && workerId <= maxWorkerId, "workerID must gte 0 and lte 1023");
-        Preconditions.checkArgument(sequenceBase >= 0 && sequenceStep > 0 && sequenceBase < sequenceStep,
-                "sequenceBase must >= 0, sequenceStep must > 0");
-        this.sequence = sequenceBase;
+        Preconditions.checkArgument(sequenceStep > 0, "sequenceStep must > 0");
+        this.odd = odd;
         this.sequenceStep = sequenceStep;
-
     }
 
     @Override
@@ -76,12 +74,14 @@ public class SnowflakeIDGenImpl implements IDGen {
             sequence = (sequence + sequenceStep) & sequenceMask;
             if (sequence == 0) {
                 //seq 为0的时候表示是下一毫秒时间开始对seq做随机
-                sequence = RANDOM.nextInt(100);
+                sequence = ThreadLocalRandom.current().nextInt(100);
                 timestamp = tilNextMillis(lastTimestamp);
             }
         } else {
             //如果是新的ms开始
-            sequence = RANDOM.nextInt(100);
+            int r = ThreadLocalRandom.current().nextInt(100);
+            r = (r % 2) * 2 + (odd ? 1 : 0);
+            sequence = r;
         }
         lastTimestamp = timestamp;
         long id = ((timestamp - twepoch) << timestampLeftShift) | (workerId << workerIdShift) | sequence;

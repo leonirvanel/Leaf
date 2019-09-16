@@ -8,7 +8,7 @@ public class Constants {
     public static final String LEAF_SNOWFLAKE_ENABLE = "leaf.snowflake.enable";
     public static final String LEAF_SNOWFLAKE_PORT = "leaf.snowflake.port";
     public static final String LEAF_SNOWFLAKE_ZK_ADDRESS = "leaf.snowflake.zk.address";
-
-    public static final String LEAF_SNOWFLAKE_SEQUENCE_BASE = "leaf.snowflake.sequence.base";
-    public static final String LEAF_SNOWFLAKE_SEQUENCE_STEP = "leaf.snowflake.sequence.step";
+    public static final String LEAF_DUBBO_ZK_ADDRESS = "leaf.dubbo.zk.address";
+    public static final String LEAF_DUBBO_THREADS = "leaf.dubbo.threads";
+    public static final String LEAF_DUBBO_PORT = "leaf.dubbo.port";
 }

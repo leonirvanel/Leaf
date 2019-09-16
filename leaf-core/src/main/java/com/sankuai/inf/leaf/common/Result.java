@@ -1,6 +1,8 @@
 package com.sankuai.inf.leaf.common;
 
-public class Result {
+import java.io.Serializable;
+
+public class Result implements Serializable {
     private long id;
     private Status status;
 
