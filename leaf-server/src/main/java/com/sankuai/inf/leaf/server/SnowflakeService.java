@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Properties;
 
-@Service("SnowflakeService")
+@Service
 public class SnowflakeService {
     private Logger logger = LoggerFactory.getLogger(SnowflakeService.class);
     IDGen idGen;

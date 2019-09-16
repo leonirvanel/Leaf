@@ -11,4 +11,6 @@ public class Constants {
     public static final String LEAF_DUBBO_ZK_ADDRESS = "leaf.dubbo.zk.address";
     public static final String LEAF_DUBBO_THREADS = "leaf.dubbo.threads";
     public static final String LEAF_DUBBO_PORT = "leaf.dubbo.port";
+    public static final String LEAF_DUBBO_TIMEOUT = "leaf.dubbo.timeout";
+    public static final String LEAF_DUBBO_RETRIES = "leaf.dubbo.retries";
 }

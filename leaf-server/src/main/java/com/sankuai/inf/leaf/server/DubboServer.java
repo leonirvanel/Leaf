@@ -51,16 +51,22 @@ public class DubboServer {
 
     @PostConstruct
     private void export() {
+        String zkRegistryAddr = PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_ZK_ADDRESS);
+        int port = Integer.parseInt(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_PORT));
+        int threads = Integer.parseInt(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_THREADS));
+        int timeoutMs = Integer.parseInt(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_TIMEOUT));
+        int retries = Integer.parseInt(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_RETRIES));
+
         ApplicationConfig application = new ApplicationConfig();
         application.setName("leaf-server");
 
         RegistryConfig registry = new RegistryConfig();
-        registry.setAddress(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_ZK_ADDRESS));
+        registry.setAddress(zkRegistryAddr);
 
         ProtocolConfig protocol = new ProtocolConfig();
         protocol.setName("dubbo");
-        protocol.setPort(Integer.parseInt(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_PORT)));
-        protocol.setThreads(Integer.parseInt(PropertyFactory.getProperties().getProperty(Constants.LEAF_DUBBO_THREADS)));
+        protocol.setPort(port);
+        protocol.setThreads(threads);
 
         ServiceConfig<IDGen> service = new ServiceConfig<>();
         service.setApplication(application);
@@ -69,6 +75,8 @@ public class DubboServer {
         service.setInterface(IDGen.class);
         service.setRef(createInstance());
         service.setCluster("failover");
+        service.setTimeout(timeoutMs);
+        service.setRetries(retries);
         service.setVersion("1.0.0");
 
         service.export();
