@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="config/config-all.properties"/>
+
+    <context:annotation-config/>
+
+    <!-- Queue -->
+    <bean id="queueConnectionFactory" class="com.ibm.mq.jms.MQQueueConnectionFactory">
+        <property name="hostName" value="${queue.des.host.name}"/>
+        <property name="port" value="${queue.des.port}"/>
+        <property name="queueManager" value="${queue.des.queue.manager}"/>
+        <property name="channel" value="${queue.des.mqi.channel}"/>
+        <property name="transportType" value="${queue.des.transport.type}"/>
+        <property name="useConnectionPooling" value="true"/>
+    </bean>
+
+    <bean id="cachingQueueConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory"
+          primary="true">
+        <property name="targetConnectionFactory" ref="queueConnectionFactory"/>
+        <property name="sessionCacheSize" value="10"/>
+        <property name="reconnectOnException" value="true"/>
+        <property name="cacheConsumers" value="true"/>
+    </bean>
+
+    <bean id="queue" class="com.ibm.mq.jms.MQQueue">
+        <property name="baseQueueName" value="${queue.des.local.queue}"/>
+        <property name="baseQueueManagerName" value="${queue.des.queue.manager}"/>
+        <property name="MQMDReadEnabled" value="true"/>
+    </bean>
+
+    <bean id="queueTextMessageListener" class="com.chinaums.messageproxy.ibmmq.QueueTextMessageListener"/>
+
+
+    <!-- Topic -->
+    <bean id="topicConnectionFactory" class="com.ibm.mq.jms.MQTopicConnectionFactory">
+        <property name="hostName" value="${topic.des.hostname}"/>
+        <property name="port" value="${topic.des.port}"/>
+        <property name="queueManager" value="${topic.des.queue.manager}"/>
+        <property name="channel" value="${topic.des.mqi.channel}"/>
+        <property name="transportType" value="${topic.des.transport.type}"/>
+        <property name="useConnectionPooling" value="true"/>
+    </bean>
+
+    <bean id="cachingTopicConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+        <property name="targetConnectionFactory" ref="topicConnectionFactory"/>
+        <property name="sessionCacheSize" value="10"/>
+        <property name="reconnectOnException" value="true"/>
+        <property name="cacheConsumers" value="true"/>
+    </bean>
+
+</beans>

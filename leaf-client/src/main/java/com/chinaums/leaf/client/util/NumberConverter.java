@@ -123,7 +123,7 @@ public class NumberConverter {
     }
 
     public static void main(String[] args) {
-        System.out.println(convert_10radix_to_62radix(Long.MAX_VALUE - 1));
+        System.out.println(convert_10radix_to_62radix(Long.MAX_VALUE - 1) + " " + Long.MAX_VALUE);
 
 //        System.out.println(convert_10radix_to_62radix(0));
 //        System.out.println(convert_10radix_to_62radix(200));

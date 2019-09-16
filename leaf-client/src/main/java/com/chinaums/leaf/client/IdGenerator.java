@@ -12,4 +12,8 @@ public class IdGenerator {
         return NumberConverter.convert_10radix_to_62radix(nextLongId());
     }
 
+    public static long nextRandomId() {
+        return 0;
+    }
+
 }

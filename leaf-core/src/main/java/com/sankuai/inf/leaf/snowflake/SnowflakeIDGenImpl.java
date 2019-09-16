@@ -27,13 +27,14 @@ public class SnowflakeIDGenImpl implements IDGen {
     private final long timestampLeftShift = sequenceBits + workerIdBits;
     private final long sequenceMask = -1L ^ (-1L << sequenceBits);
     private long workerId;
-    private long sequence = 0L;
+    private long sequence;
+    private long sequenceStep;
     private long lastTimestamp = -1L;
     public boolean initFlag = false;
     private static final Random RANDOM = new Random();
     private int port;
 
-    public SnowflakeIDGenImpl(String zkAddress, int port) {
+    public SnowflakeIDGenImpl(String zkAddress, int port, long sequenceBase, long sequenceStep) {
         this.port = port;
         SnowflakeZookeeperHolder holder = new SnowflakeZookeeperHolder(Utils.getIp(), String.valueOf(port), zkAddress);
         initFlag = holder.init();
@@ -44,6 +45,11 @@ public class SnowflakeIDGenImpl implements IDGen {
             Preconditions.checkArgument(initFlag, "Snowflake Id Gen is not init ok");
         }
         Preconditions.checkArgument(workerId >= 0 && workerId <= maxWorkerId, "workerID must gte 0 and lte 1023");
+        Preconditions.checkArgument(sequenceBase >= 0 && sequenceStep > 0 && sequenceBase < sequenceStep,
+                "sequenceBase must >= 0, sequenceStep must > 0");
+        this.sequence = sequenceBase;
+        this.sequenceStep = sequenceStep;
+
     }
 
     @Override
@@ -67,7 +73,7 @@ public class SnowflakeIDGenImpl implements IDGen {
             }
         }
         if (lastTimestamp == timestamp) {
-            sequence = (sequence + 1) & sequenceMask;
+            sequence = (sequence + sequenceStep) & sequenceMask;
             if (sequence == 0) {
                 //seq 为0的时候表示是下一毫秒时间开始对seq做随机
                 sequence = RANDOM.nextInt(100);

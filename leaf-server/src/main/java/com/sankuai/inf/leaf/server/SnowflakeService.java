@@ -22,7 +22,9 @@ public class SnowflakeService {
         if (flag) {
             String zkAddress = properties.getProperty(Constants.LEAF_SNOWFLAKE_ZK_ADDRESS);
             int port = Integer.parseInt(properties.getProperty(Constants.LEAF_SNOWFLAKE_PORT));
-            idGen = new SnowflakeIDGenImpl(zkAddress, port);
+            long sequenceBase = 0;
+            long sequenceStep = 2;
+            idGen = new SnowflakeIDGenImpl(zkAddress, port, sequenceBase, sequenceStep);
             if(idGen.init()) {
                 logger.info("Snowflake Service Init Successfully");
             } else {
