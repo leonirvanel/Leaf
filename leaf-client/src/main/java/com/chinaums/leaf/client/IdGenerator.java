@@ -1,6 +1,5 @@
 package com.chinaums.leaf.client;
 
-import com.chinaums.leaf.client.util.NumberConverter;
 import com.sankuai.inf.leaf.IDGen;
 import com.sankuai.inf.leaf.common.PropertyFactory;
 import com.sankuai.inf.leaf.common.Result;
@@ -14,6 +13,10 @@ public class IdGenerator {
     private String zkAddrs;
 
     private IDGen instance;
+
+    private IDGen stickyInstance;
+
+    private final boolean STICKY_DEFAULT = false;
 
     /**
      * 单个地址是IP:PORT格式
@@ -46,12 +49,25 @@ public class IdGenerator {
             if (null != instance) {
                 return instance;
             }
-            instance = importReference(zkAddrs);
+            instance = importReference(zkAddrs, STICKY_DEFAULT);
         }
         return instance;
     }
 
-    private IDGen importReference(String zkAddrs) {
+    private IDGen getStickyInstance() {
+        if (null != stickyInstance) {
+            return stickyInstance;
+        }
+        synchronized (IdGenerator.class) {
+            if (null != stickyInstance) {
+                return stickyInstance;
+            }
+            stickyInstance = importReference(zkAddrs, true);
+        }
+        return stickyInstance;
+    }
+
+    private IDGen importReference(String zkAddrs, boolean sticky) {
         ApplicationConfig application = new ApplicationConfig();
         application.setName("leaf-client");
 
@@ -62,23 +78,28 @@ public class IdGenerator {
         reference.setApplication(application);
         reference.setRegistry(registry);
         reference.setInterface(IDGen.class);
+        // 是否开启粘性连接。需要趋势递增ID的client，建议开启
+        reference.setSticky(sticky);
         // cluster、timeout等参数，在服务端设定
         reference.setVersion("1.0.0");
 
         return reference.get();
     }
 
-    public long nextId(String key) {
-        Result result = instance.get(key);
+    public long nextRandomId(String key) {
+        Result result = getInstance().get(key);
         if (result.getStatus() != Status.SUCCESS) {
             throw new IllegalStateException("leaf服务不可用");
         }
         return result.getId();
     }
 
-    public String nextStringId(String key) {
-        long id = nextId(key);
-        return NumberConverter.convert_10radix_to_62radix(id);
+    public long nextSequenceId(String key) {
+        Result result = getStickyInstance().get(key);
+        if (result.getStatus() != Status.SUCCESS) {
+            throw new IllegalStateException("leaf服务不可用");
+        }
+        return result.getId();
     }
 
 }
