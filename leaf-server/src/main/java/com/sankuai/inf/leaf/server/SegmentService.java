@@ -25,7 +25,8 @@ public class SegmentService {
         Properties properties = PropertyFactory.getProperties();
         boolean flag = Boolean.parseBoolean(properties.getProperty(Constants.LEAF_SEGMENT_ENABLE, "true"));
         if (flag) {
-
+            boolean snowFlakeOdd = Boolean.parseBoolean(properties.getProperty(Constants.LEAF_SNOWFLAKE_ODD));
+            boolean segmentOdd = !snowFlakeOdd;
 
             // Config dataSource
             dataSource = new DruidDataSource();
@@ -38,8 +39,7 @@ public class SegmentService {
             IDAllocDao dao = new IDAllocDaoImpl(dataSource);
 
             // Config ID Gen
-            idGen = new SegmentIDGenImpl();
-            ((SegmentIDGenImpl) idGen).setDao(dao);
+            idGen = new SegmentIDGenImpl(dao, segmentOdd);
             if (idGen.init()) {
                 logger.info("Segment Service Init Successfully");
             } else {

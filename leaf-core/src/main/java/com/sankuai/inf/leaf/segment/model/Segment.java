@@ -12,13 +12,26 @@ public class Segment {
         this.buffer = buffer;
     }
 
-    public AtomicLong getValue() {
-        return value;
+    public long getValue() {
+        return this.value.get();
     }
 
-    public void setValue(AtomicLong value) {
-        this.value = value;
+//    public AtomicLong getValue() {
+//        return this.value;
+//    }
+
+    public long nextValue(long delta, boolean odd) {
+        long v = this.value.addAndGet(delta);
+        return (v % 2) * 2 + (odd ? 1 : 0);
     }
+
+    public void updateValue(long newValue) {
+        this.value.set(newValue);
+    }
+
+//    public void setValue(AtomicLong value) {
+//        this.value = value;
+//    }
 
     public long getMax() {
         return max;
@@ -41,7 +54,7 @@ public class Segment {
     }
 
     public long getIdle() {
-        return this.getMax() - getValue().get();
+        return this.getMax() - this.value.get();
     }
 
     @Override

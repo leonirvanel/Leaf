@@ -28,13 +28,12 @@ public class SnowflakeIDGenImpl implements IDGen {
     private final long sequenceMask = -1L ^ (-1L << sequenceBits);
     private long workerId;
     private long sequence;
-    private long sequenceStep;
     private long lastTimestamp = -1L;
     public boolean initFlag = false;
     private int port;
     private boolean odd;
 
-    public SnowflakeIDGenImpl(String zkAddress, int port, boolean odd, long sequenceStep) {
+    public SnowflakeIDGenImpl(String zkAddress, int port, boolean odd) {
         this.port = port;
         SnowflakeZookeeperHolder holder = new SnowflakeZookeeperHolder(Utils.getIp(), String.valueOf(port), zkAddress);
         initFlag = holder.init();
@@ -45,9 +44,7 @@ public class SnowflakeIDGenImpl implements IDGen {
             Preconditions.checkArgument(initFlag, "Snowflake Id Gen is not init ok");
         }
         Preconditions.checkArgument(workerId >= 0 && workerId <= maxWorkerId, "workerID must gte 0 and lte 1023");
-        Preconditions.checkArgument(sequenceStep > 0, "sequenceStep must > 0");
         this.odd = odd;
-        this.sequenceStep = sequenceStep;
     }
 
     @Override
@@ -71,22 +68,25 @@ public class SnowflakeIDGenImpl implements IDGen {
             }
         }
         if (lastTimestamp == timestamp) {
-            sequence = (sequence + sequenceStep) & sequenceMask;
+            sequence = (sequence + 2) & sequenceMask;
             if (sequence == 0) {
                 //seq 为0的时候表示是下一毫秒时间开始对seq做随机
-                sequence = ThreadLocalRandom.current().nextInt(100);
+                sequence = nextInitialSequence(odd);
                 timestamp = tilNextMillis(lastTimestamp);
             }
         } else {
             //如果是新的ms开始
-            int r = ThreadLocalRandom.current().nextInt(100);
-            r = (r % 2) * 2 + (odd ? 1 : 0);
-            sequence = r;
+            sequence = nextInitialSequence(odd);
         }
         lastTimestamp = timestamp;
         long id = ((timestamp - twepoch) << timestampLeftShift) | (workerId << workerIdShift) | sequence;
         return new Result(id, Status.SUCCESS);
 
+    }
+
+    private long nextInitialSequence(boolean odd) {
+        int r = ThreadLocalRandom.current().nextInt(100);
+        return (r % 2) * 2 + (odd ? 1 : 0);
     }
 
     protected long tilNextMillis(long lastTimestamp) {

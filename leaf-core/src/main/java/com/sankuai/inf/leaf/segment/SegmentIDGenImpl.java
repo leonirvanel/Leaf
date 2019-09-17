@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class SegmentIDGenImpl implements IDGen {
     private static final Logger logger = LoggerFactory.getLogger(SegmentIDGenImpl.class);
@@ -41,6 +40,12 @@ public class SegmentIDGenImpl implements IDGen {
     private volatile boolean initOK = false;
     private Map<String, SegmentBuffer> cache = new ConcurrentHashMap<String, SegmentBuffer>();
     private IDAllocDao dao;
+    private boolean odd;
+
+    public SegmentIDGenImpl(IDAllocDao dao, boolean odd) {
+        this.dao = dao;
+        this.odd = odd;
+    }
 
     public static class UpdateThreadFactory implements ThreadFactory {
 
@@ -101,7 +106,7 @@ public class SegmentIDGenImpl implements IDGen {
                 SegmentBuffer buffer = new SegmentBuffer();
                 buffer.setKey(tag);
                 Segment segment = buffer.getCurrent();
-                segment.setValue(new AtomicLong(0));
+                segment.updateValue(0);
                 segment.setMax(0);
                 segment.setStep(0);
                 cache.put(tag, buffer);
@@ -182,7 +187,7 @@ public class SegmentIDGenImpl implements IDGen {
         }
         // must set value before set max
         long value = leafAlloc.getMaxId() - buffer.getStep();
-        segment.getValue().set(value);
+        segment.updateValue(value);
         segment.setMax(leafAlloc.getMaxId());
         segment.setStep(buffer.getStep());
         sw.stop("updateSegmentFromDb", key + " " + segment);
@@ -218,7 +223,7 @@ public class SegmentIDGenImpl implements IDGen {
                         }
                     });
                 }
-                long value = segment.getValue().getAndIncrement();
+                long value = segment.nextValue(2, odd);
                 if (value < segment.getMax()) {
                     return new Result(value, Status.SUCCESS);
                 }
@@ -229,7 +234,7 @@ public class SegmentIDGenImpl implements IDGen {
             try {
                 buffer.wLock().lock();
                 final Segment segment = buffer.getCurrent();
-                long value = segment.getValue().getAndIncrement();
+                long value = segment.nextValue(2, odd);
                 if (value < segment.getMax()) {
                     return new Result(value, Status.SUCCESS);
                 }
