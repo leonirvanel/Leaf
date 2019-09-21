@@ -33,8 +33,7 @@ public class IDGenServiceTest {
         IDAllocDao dao = new IDAllocDaoImpl(dataSource);
 
         // Config ID Gen
-        idGen = new SegmentIDGenImpl();
-        ((SegmentIDGenImpl) idGen).setDao(dao);
+        idGen = new SegmentIDGenImpl(dao, true);
         idGen.init();
     }
     @Test

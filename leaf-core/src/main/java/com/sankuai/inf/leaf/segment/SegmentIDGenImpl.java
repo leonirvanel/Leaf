@@ -41,6 +41,12 @@ public class SegmentIDGenImpl implements IDGen {
     private volatile boolean initOK = false;
     private Map<String, SegmentBuffer> cache = new ConcurrentHashMap<String, SegmentBuffer>();
     private IDAllocDao dao;
+    private boolean autoCreateSegment;
+
+    public SegmentIDGenImpl(IDAllocDao dao, boolean autoCreateSegment) {
+        this.dao = dao;
+        this.autoCreateSegment = autoCreateSegment;
+    }
 
     public static class UpdateThreadFactory implements ThreadFactory {
 
@@ -120,11 +126,23 @@ public class SegmentIDGenImpl implements IDGen {
         }
     }
 
+    private void insertSegmentIntoDbAndReloadCache(String key) {
+        dao.insertSegmentAndGetLeafAlloc(key);
+        updateCacheFromDb();
+    }
+
     @Override
     public Result get(final String key) {
         if (!initOK) {
+            logger.error("Initializing, reject request {}", key);
             return new Result(EXCEPTION_ID_IDCACHE_INIT_FALSE, Status.EXCEPTION);
         }
+
+        if (!cache.containsKey(key) && autoCreateSegment) {
+            logger.info("Auto create segment {}", key);
+            insertSegmentIntoDbAndReloadCache(key);
+        }
+
         if (cache.containsKey(key)) {
             SegmentBuffer buffer = cache.get(key);
             if (!buffer.isInitOk()) {
@@ -141,6 +159,8 @@ public class SegmentIDGenImpl implements IDGen {
                 }
             }
             return getIdFromSegmentBuffer(cache.get(key));
+        } else {
+            logger.error("Fatal error! configure key[{}] into database leaf_alloc", key);
         }
         return new Result(EXCEPTION_ID_KEY_NOT_EXISTS, Status.EXCEPTION);
     }
@@ -151,10 +171,12 @@ public class SegmentIDGenImpl implements IDGen {
         LeafAlloc leafAlloc;
         if (!buffer.isInitOk()) {
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
+            logger.info("updateMaxIdAndGetLeafAlloc {}", leafAlloc);
             buffer.setStep(leafAlloc.getStep());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
         } else if (buffer.getUpdateTimestamp() == 0) {
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
+            logger.info("updateMaxIdAndGetLeafAlloc {}", leafAlloc);
             buffer.setUpdateTimestamp(System.currentTimeMillis());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
         } else {
@@ -176,6 +198,7 @@ public class SegmentIDGenImpl implements IDGen {
             temp.setKey(key);
             temp.setStep(nextStep);
             leafAlloc = dao.updateMaxIdByCustomStepAndGetLeafAlloc(temp);
+            logger.info("updateMaxIdByCustomStepAndGetLeafAlloc {}", leafAlloc);
             buffer.setUpdateTimestamp(System.currentTimeMillis());
             buffer.setStep(nextStep);
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc的step为DB中的step

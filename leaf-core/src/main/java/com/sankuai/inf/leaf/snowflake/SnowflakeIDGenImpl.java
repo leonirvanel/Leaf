@@ -8,7 +8,7 @@ import com.sankuai.inf.leaf.common.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SnowflakeIDGenImpl implements IDGen {
 
@@ -20,20 +20,22 @@ public class SnowflakeIDGenImpl implements IDGen {
     static private final Logger LOGGER = LoggerFactory.getLogger(SnowflakeIDGenImpl.class);
 
     private final long twepoch = 1288834974657L;
-    private final long workerIdBits = 10L;
+    //private final long workerIdBits = 10L;
+    private final long workerIdBits = 5L;//最多支持31台发码器，够了
     private final long maxWorkerId = -1L ^ (-1L << workerIdBits);//最大能够分配的workerid =1023
-    private final long sequenceBits = 12L;
+    //private final long sequenceBits = 12L;
+    private final long sequenceBits = 17L;//单机最大TPS为13万/秒。实测单个8C的BCC的最大TPS为3.5万/秒
     private final long workerIdShift = sequenceBits;
     private final long timestampLeftShift = sequenceBits + workerIdBits;
     private final long sequenceMask = -1L ^ (-1L << sequenceBits);
     private long workerId;
-    private long sequence = 0L;
+    private long sequence;
     private long lastTimestamp = -1L;
     public boolean initFlag = false;
-    private static final Random RANDOM = new Random();
     private int port;
+    private boolean odd;
 
-    public SnowflakeIDGenImpl(String zkAddress, int port) {
+    public SnowflakeIDGenImpl(String zkAddress, int port, boolean odd) {
         this.port = port;
         SnowflakeZookeeperHolder holder = new SnowflakeZookeeperHolder(Utils.getIp(), String.valueOf(port), zkAddress);
         initFlag = holder.init();
@@ -43,7 +45,8 @@ public class SnowflakeIDGenImpl implements IDGen {
         } else {
             Preconditions.checkArgument(initFlag, "Snowflake Id Gen is not init ok");
         }
-        Preconditions.checkArgument(workerId >= 0 && workerId <= maxWorkerId, "workerID must gte 0 and lte 1023");
+        Preconditions.checkArgument(workerId >= 0 && workerId <= maxWorkerId, "workerID must gte 0 and lte 31");
+        this.odd = odd;
     }
 
     @Override
@@ -67,20 +70,25 @@ public class SnowflakeIDGenImpl implements IDGen {
             }
         }
         if (lastTimestamp == timestamp) {
-            sequence = (sequence + 1) & sequenceMask;
+            sequence = (sequence + 2) & sequenceMask;
             if (sequence == 0) {
                 //seq 为0的时候表示是下一毫秒时间开始对seq做随机
-                sequence = RANDOM.nextInt(100);
+                sequence = nextInitialSequence(odd);
                 timestamp = tilNextMillis(lastTimestamp);
             }
         } else {
             //如果是新的ms开始
-            sequence = RANDOM.nextInt(100);
+            sequence = nextInitialSequence(odd);
         }
         lastTimestamp = timestamp;
         long id = ((timestamp - twepoch) << timestampLeftShift) | (workerId << workerIdShift) | sequence;
         return new Result(id, Status.SUCCESS);
 
+    }
+
+    private long nextInitialSequence(boolean odd) {
+        int r = ThreadLocalRandom.current().nextInt(100);
+        return (r % 2) * 2 + (odd ? 1 : 0);
     }
 
     protected long tilNextMillis(long lastTimestamp) {

@@ -32,4 +32,7 @@ public interface IDAllocMapper {
 
     @Select("SELECT biz_tag FROM leaf_alloc")
     List<String> getAllTags();
+
+    @Insert("INSERT INTO leaf_alloc (biz_tag, max_id, step) VALUES(#{tag}, 1, 100000)")
+    void insertSegment(@Param("tag") String tag);
 }

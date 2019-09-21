@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+	<logger name="org.apache.dubbo.monitor" level="OFF" />
+
+	<if condition='isDefined("run_env")'>
+		<then>
+			<appender name="rollingFile"
+				class="ch.qos.logback.core.rolling.RollingFileAppender">
+				<file>./server.log</file>
+				<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+					<fileNamePattern>./server.log.%d{yyyy-MM-dd}
+					</fileNamePattern>
+					<maxHistory>7</maxHistory>
+				</rollingPolicy>
+				<encoder>
+					<pattern>%d{HH:mm:ss.SSS} %-5level [%.15thread] %logger{36} - %.-4096msg%n</pattern>
+				</encoder>
+			</appender>
+
+			<appender name="async" class="ch.qos.logback.classic.AsyncAppender">
+				<discardingThreshold>10</discardingThreshold>
+				<queueSize>10000</queueSize>
+				<neverBlock>true</neverBlock>
+				<appender-ref ref="rollingFile" />
+			</appender>
+
+			<root level="INFO">
+				<appender-ref ref="async" />
+			</root>
+		</then>
+		<else>
+			<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+				<encoder>
+					<pattern>%d{HH:mm:ss.SSS} %-5level [%.15thread] %logger{36} - %.-4096msg%n</pattern>
+				</encoder>
+			</appender>
+
+			<root level="INFO">
+				<appender-ref ref="console" />
+			</root>
+		</else>
+	</if>
+</configuration>

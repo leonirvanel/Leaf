@@ -1,13 +1,15 @@
-package com.sankuai.inf.leaf.server;
+package com.sankuai.inf.leaf.server.service;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.sankuai.inf.leaf.IDGen;
 import com.sankuai.inf.leaf.common.PropertyFactory;
 import com.sankuai.inf.leaf.common.Result;
+import com.sankuai.inf.leaf.common.Status;
 import com.sankuai.inf.leaf.common.ZeroIDGen;
 import com.sankuai.inf.leaf.segment.SegmentIDGenImpl;
 import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
 import com.sankuai.inf.leaf.segment.dao.impl.IDAllocDaoImpl;
+import com.sankuai.inf.leaf.server.Constants;
 import com.sankuai.inf.leaf.server.exception.InitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,16 +18,20 @@ import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 import java.util.Properties;
 
-@Service("SegmentService")
+@Service
 public class SegmentService {
     private Logger logger = LoggerFactory.getLogger(SegmentService.class);
     IDGen idGen;
     DruidDataSource dataSource;
+    boolean even;
+
     public SegmentService() throws SQLException, InitException {
         Properties properties = PropertyFactory.getProperties();
         boolean flag = Boolean.parseBoolean(properties.getProperty(Constants.LEAF_SEGMENT_ENABLE, "true"));
         if (flag) {
-
+            boolean snowFlakeOdd = Boolean.parseBoolean(properties.getProperty(Constants.LEAF_SNOWFLAKE_ODD));
+            even = snowFlakeOdd;
+            boolean autoCreateSegment = Boolean.parseBoolean(properties.getProperty(Constants.LEAF_SEGMENT_AUTO_CREATE));
 
             // Config dataSource
             dataSource = new DruidDataSource();
@@ -38,8 +44,7 @@ public class SegmentService {
             IDAllocDao dao = new IDAllocDaoImpl(dataSource);
 
             // Config ID Gen
-            idGen = new SegmentIDGenImpl();
-            ((SegmentIDGenImpl) idGen).setDao(dao);
+            idGen = new SegmentIDGenImpl(dao, autoCreateSegment);
             if (idGen.init()) {
                 logger.info("Segment Service Init Successfully");
             } else {
@@ -51,7 +56,11 @@ public class SegmentService {
         }
     }
     public Result getId(String key) {
-        return idGen.get(key);
+        Result result = idGen.get(key);
+        if (result.getStatus() == Status.SUCCESS && even) {
+            result.setId(result.getId() * 2);
+        }
+        return result;
     }
     public SegmentIDGenImpl getIdGen() {
         if (idGen instanceof SegmentIDGenImpl) {

@@ -1,9 +1,10 @@
-package com.sankuai.inf.leaf.server;
+package com.sankuai.inf.leaf.server.service;
 
 import com.sankuai.inf.leaf.IDGen;
 import com.sankuai.inf.leaf.common.PropertyFactory;
 import com.sankuai.inf.leaf.common.Result;
 import com.sankuai.inf.leaf.common.ZeroIDGen;
+import com.sankuai.inf.leaf.server.Constants;
 import com.sankuai.inf.leaf.server.exception.InitException;
 import com.sankuai.inf.leaf.snowflake.SnowflakeIDGenImpl;
 import org.slf4j.Logger;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Properties;
 
-@Service("SnowflakeService")
+@Service
 public class SnowflakeService {
     private Logger logger = LoggerFactory.getLogger(SnowflakeService.class);
     IDGen idGen;
@@ -22,7 +23,8 @@ public class SnowflakeService {
         if (flag) {
             String zkAddress = properties.getProperty(Constants.LEAF_SNOWFLAKE_ZK_ADDRESS);
             int port = Integer.parseInt(properties.getProperty(Constants.LEAF_SNOWFLAKE_PORT));
-            idGen = new SnowflakeIDGenImpl(zkAddress, port);
+            boolean snowFlakeOdd = Boolean.parseBoolean(properties.getProperty(Constants.LEAF_SNOWFLAKE_ODD));
+            idGen = new SnowflakeIDGenImpl(zkAddress, port, snowFlakeOdd);
             if(idGen.init()) {
                 logger.info("Snowflake Service Init Successfully");
             } else {

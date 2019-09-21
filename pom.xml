@@ -8,6 +8,7 @@
     <version>1.0.1</version>
     <name>Leaf</name>
     <modules>
+        <module>leaf-client</module>
         <module>leaf-core</module>
         <module>leaf-server</module>
     </modules>
@@ -41,7 +42,7 @@
         <maven.compiler.version>3.5.1</maven.compiler.version>
         <mybatis.version>3.3.0</mybatis.version>
         <perf4j.version>0.9.16</perf4j.version>
-        <curator.version>2.6.0</curator.version>
+        <curator.version>4.0.1</curator.version>
         <slf4j.version>1.7.2</slf4j.version>
         <druid.version>1.0.18</druid.version>
         <jackson-databind.version>2.9.6</jackson-databind.version>
@@ -49,14 +50,10 @@
         <commons-io.version>2.4</commons-io.version>
         <log4j.version>2.7</log4j.version>
         <mybatis-spring.version>1.2.5</mybatis-spring.version>
+        <dubbo.version>2.7.3</dubbo.version>
     </properties>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>com.sankuai.inf.leaf</groupId>
-                <artifactId>leaf-core</artifactId>
-                <version>1.0.1</version>
-            </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
@@ -90,10 +87,15 @@
                 <artifactId>perf4j</artifactId>
                 <version>${perf4j.version}</version>
             </dependency>
+            <!--<dependency>-->
+                <!--<groupId>org.slf4j</groupId>-->
+                <!--<artifactId>slf4j-api</artifactId>-->
+                <!--<version>${slf4j.version}</version>-->
+            <!--</dependency>-->
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.2.3</version>
             </dependency>
 
             <dependency>
@@ -122,21 +124,21 @@
                 <version>${spring.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>${log4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-                <version>${log4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-                <version>${log4j.version}</version>
-            </dependency>
+            <!--<dependency>-->
+                <!--<groupId>org.apache.logging.log4j</groupId>-->
+                <!--<artifactId>log4j-slf4j-impl</artifactId>-->
+                <!--<version>${log4j.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>org.apache.logging.log4j</groupId>-->
+                <!--<artifactId>log4j-api</artifactId>-->
+                <!--<version>${log4j.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>org.apache.logging.log4j</groupId>-->
+                <!--<artifactId>log4j-core</artifactId>-->
+                <!--<version>${log4j.version}</version>-->
+            <!--</dependency>-->
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
@@ -152,6 +154,11 @@
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo</artifactId>
+                <version>${dubbo.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
@@ -162,8 +169,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
